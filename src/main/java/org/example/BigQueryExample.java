@@ -10,6 +10,7 @@ import com.google.cloud.bigquery.JobInfo;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class BigQueryExample {
 
@@ -25,18 +26,19 @@ public class BigQueryExample {
                     .getService();
 
             String query = "SELECT sku, enabled FROM `liverpool-big-query.relevance_ranking.NEW_ARRIVALS_HISTORIA` " +
-                    "WHERE dia >= '2024-06-01' LIMIT 1000";
+                    "WHERE enabled is true";
 
             QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(query).build();
 
             JobId jobId = JobId.of(UUID.randomUUID().toString());
 
             TableResult result = bigQuery.query(queryConfig, jobId);
-
+            AtomicInteger contador = new AtomicInteger(0);
             result.iterateAll().forEach(row -> {
                 String sku = row.get("sku").getStringValue();
                 boolean enabled = row.get("enabled").getBooleanValue();
-                System.out.println("SKU: " + sku + ", Enabled: " + enabled);
+                contador.incrementAndGet();
+                System.out.println(contador.get()+" SKU: " + sku + ", Enabled: " + enabled);
             });
 
         } catch (IOException | InterruptedException e) {
